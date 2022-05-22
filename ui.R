@@ -9,8 +9,8 @@
 
 library(shiny)
 library(shinyalert)
-library("readxl")
-ds <- read_excel("/Users/lu_y/Downloads/CourseList.xlsx", sheet = 'in')
+library(readxl)
+ds <- read_excel("CourseList.xlsx", sheet = 'in')
 ds <- ds[-(1:2),]
 colnames(ds) <- c('session', 'course', 'section', 'title', 'instructor',
                   'days', 'start', 'end', 'campus', 'location', 

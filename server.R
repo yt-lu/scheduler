@@ -11,7 +11,7 @@ library(shiny)
 library(shinyalert)
 library(readxl)
 
-ds <- read_excel("/Users/lu_y/Downloads/CourseList.xlsx", sheet = 'in')
+ds <- read_excel("CourseList.xlsx", sheet = 'in')
 #ds <- read_excel("/Users/lu_y/Downloads/CourseList.xls", sheet = 'CourseList ')
 ds <- ds[-(1:2),]
 m <- nrow(ds)
