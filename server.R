@@ -10,11 +10,11 @@
 library(shiny)
 library(shinyalert)
 library(readxl)
+library(DT)
+
 
 ds <- read_excel("CourseList.xlsx", sheet = 'in')
-#ds <- read_excel("/Users/lu_y/Downloads/CourseList.xls", sheet = 'CourseList ')
 ds <- ds[-(1:2),]
-
 m <- nrow(ds)
 n <- ncol(ds)
 
@@ -24,6 +24,12 @@ colnames(ds) <- c('session', 'course', 'section', 'title', 'instructor',
 
 ds$days <- gsub('\\s+', '', ds$days) # Trim the white space
 
+# Get courses with large number of sections
+t <- as.matrix(table(ds$course, ds$section))
+t[t>1] <- 1
+tnew <- apply(t, 1, sum)
+large_enrollment_course <- names(tnew[tnew > 5])
+
 # ds_copy for nice display in time columns
 ds_copy <- ds
 time0 <- as.numeric(unlist(ds[, 'start']))
@@ -31,11 +37,12 @@ time1 <- as.numeric(unlist(ds[, 'end']))
 ds_copy[, 'start'] <- format(as.POSIXct(time0*24*3600, origin="2001-01-01", "GMT"), "%I:%M %p")
 ds_copy[, 'end'] <- format(as.POSIXct(time1*24*3600, origin="2001-01-01", "GMT"), "%I:%M %p")
 
-ds[nrow(ds) + 1, ] <- as.list(rep('********', n)) # A separation line
-ds_copy[nrow(ds_copy) + 1, ] <- as.list(rep('********', n)) # A separation line
+ds[nrow(ds) + 1, ] <- as.list(rep(' ', n)) # A separation line
+ds_copy[nrow(ds_copy) + 1, ] <- as.list(rep(' ', n)) # A separation line
 
-ds['extra'] <- '<br>'                # Add a line breaker in the end of each row for printing
-ds_copy['extra'] <- '<br>'                # Add a line breaker in the end of each row for printing
+# mark separation line as 1
+ds['extra'] <- ifelse(ds$course == ' ', 1, 0)               
+ds_copy['extra'] <- ifelse(ds$course == ' ', 1, 0)               
 
 
 shinyServer(function(input, output, session) {
@@ -124,125 +131,149 @@ shinyServer(function(input, output, session) {
     ####################################################
     id <- eventReactive(input$run, {
         if (input$OpenSeat == TRUE) {
-            ds <- ds[which(ds$open > 0 | ds$open == '********'),]
+            ds <- ds[which(ds$open > 0 | ds$open == ' '),]
         }
         x <- unlist(lapply(1:6, function(i){input[[paste0('c', i)]]}))
         y <- unlist(lapply(1:6, function(i){input[[paste0('s', i)]]}))
         m <- which(x != '--')
         n <- which(y != '--')
         mn <- intersect(m, n)
-        
+
         if (length(mn) == 0) 
             open <- m
         else
             open <- m[-mn]
         
-        max_depth <- length(open)
-        tab <- matrix(NA, nrow = 6, ncol = 1) # All possible schedules
-        sched <- rep(NA, 6)                   # One possible schedule
-        list <- nrow(ds) # Initialize list of schedules
-        if (length(m) == 0) 
+        large_enrollment <- intersect(x[open], large_enrollment_course)
+        how_many <- length(large_enrollment)
+        if (how_many > 3) {
+            shinyalert(title = 'Sorry', 
+                        text = c(sprintf('The app can only search for at most THREE 
+                                    large enrollment courses with no specified sections. 
+                                    You have provided %d: ', how_many), large_enrollment),
+                       type = 'info', 
+                       html = TRUE)
             return()
-        else {
-            done = FALSE
-            if (length(mn) > 0) {
-                temp <- which(ds$course == x[mn[1]] & ds$section == y[mn[1]])
-                list <- c(list, temp)
-                sched[mn[1]] <- y[mn[1]]
-                for (i in mn[-1]) {
-                    temp <- which(ds$course == x[i] & ds$section == y[i])
-                    if (addsection(list, temp)) {
-                        sched[i] <- y[i]
-                        list <- c(list, temp)
-                    } else {
-                        shinyalert('Schedule conflict', 
-                                   paste(x[mn[i]], 'conflicts with one of the existing course'), 
-                                   type = 'error')
-                        done = TRUE
-                        break
+        }else {
+            max_depth <- length(open)
+            tab <- matrix(NA, nrow = 6, ncol = 1) # All possible schedules
+            sched <- rep(NA, 6)                   # One possible schedule
+            list <- nrow(ds) # Initialize list of schedules
+            if (length(m) == 0) 
+                return()
+            else {
+                done = FALSE
+                if (length(mn) > 0) {
+                    temp <- which(ds$course == x[mn[1]] & ds$section == y[mn[1]])
+                    list <- c(list, temp)
+                    sched[mn[1]] <- y[mn[1]]
+                    for (i in mn[-1]) {
+                        temp <- which(ds$course == x[i] & ds$section == y[i])
+                        if (addsection(list, temp)) {
+                            sched[i] <- y[i]
+                            list <- c(list, temp)
+                        } else {
+                            shinyalert('Schedule conflict', 
+                                       paste(x[mn[i]], 'conflicts with one of the existing course'), 
+                                       type = 'error')
+                            done = TRUE
+                            break
+                        }
                     }
                 }
-            }
-            
-            if (done) {
-                return()
-            }else {
-                if (max_depth == 0) {
-                    return(list)
+                
+                if (done) {
+                    return()
                 }else {
-                    
-                    # Need a search when max_depth > 0
-                    max_width <- rep(NA, max_depth)
-                    max_width <- sapply(1:max_depth, function(i){
-                        max_width[i] = length(unique(ds[which(ds$course == x[open[i]]),]$section))
-                        })
-                    d <- 1
-                    w <- 1
-                    while(!(d == 1 & w > max_width[1])) {
-                        
-                        
-                        if (w > max_width[d] & d > 1) {
-                            print('going back one level')
-                            d <- d - 1
-                            w <- as.numeric(sched[open[d]]) + 1
-                            sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
-                            erase <- which(ds$course == x[open[d]] & ds$section == sec[w - 1])
-                            list <- list[! list %in% erase]
-                        } else {
-                            sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
-                            temp <- which(ds$course == x[open[d]] & ds$section == sec[w])
-                            if (addsection(list, temp) & d < max_depth) {
-                                print('go deeper')
-                                sched[open[d]] <- w
-                                list <- c(list, temp)
-                                d <- d + 1
-                                w <- 1
-                            }else if (addsection(list, temp) & d == max_depth) {
-                                print('s. go wider')
-                                sched[open[d]] <- w
-                                tab <- cbind(tab, sched)
-                                sched[open[d]] <- NA
-                                list <- list[! list %in% temp]
-                                w <- w + 1
-                            }else if (!addsection(list, temp)) {
-                                print('f. go wider')
-                                w <- w + 1
-                            }
-                        }
-                    }
-                    if (ncol(tab) == 1) {
-                        shinyalert('No compatible schedules for these courses.', type = 'error')
-                        return()
-                    }else {
-                        tab <- as.data.frame(tab[, -1])
-                        ns <- ncol(tab) # number of schedules
-                        list <- nrow(ds)
-                        for (i in 1:ns) {
-                            for (j in m) {
-                                sections <- unique(ds[which(ds$course == x[j]),]$section)
-                                temp <- which(ds$course == x[j] & ds$section == sections[as.numeric(tab[j, i])])
-                                list <- c(list, temp)
-                            }
-                            list <- c(list, nrow(ds))
-                        }
+                    if (max_depth == 0) {
                         return(list)
+                    }else {
+                        
+                        # Need a search when max_depth > 0
+                        max_width <- rep(NA, max_depth)
+                        max_width <- sapply(1:max_depth, function(i){
+                            max_width[i] = length(unique(ds[which(ds$course == x[open[i]]),]$section))
+                        })
+                        d <- 1
+                        w <- 1
+                        while(!(d == 1 & w > max_width[1])) {
+                            
+                            
+                            if (w > max_width[d] & d > 1) {
+                                # print('going back one level')
+                                d <- d - 1
+                                w <- as.numeric(sched[open[d]]) + 1
+                                sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
+                                erase <- which(ds$course == x[open[d]] & ds$section == sec[w - 1])
+                                list <- list[! list %in% erase]
+                            } else {
+                                sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
+                                temp <- which(ds$course == x[open[d]] & ds$section == sec[w])
+                                if (addsection(list, temp) & d < max_depth) {
+                                    # print('go deeper')
+                                    sched[open[d]] <- w
+                                    list <- c(list, temp)
+                                    d <- d + 1
+                                    w <- 1
+                                }else if (addsection(list, temp) & d == max_depth) {
+                                    # print('s. go wider')
+                                    sched[open[d]] <- w
+                                    tab <- cbind(tab, sched)
+                                    sched[open[d]] <- NA
+                                    list <- list[! list %in% temp]
+                                    w <- w + 1
+                                }else if (!addsection(list, temp)) {
+                                    # print('f. go wider')
+                                    w <- w + 1
+                                }
+                            }
+                        }
+                        if (ncol(tab) == 1) {
+                            shinyalert('No compatible schedules for these courses.', type = 'error')
+                            return()
+                        }else {
+                            tab <- as.data.frame(tab[, -1])
+                            ns <- ncol(tab) # number of schedules
+                            list <- nrow(ds)
+                            for (i in 1:ns) {
+                                # print(c('Schedule', i))
+                                for (j in m) {
+                                    sections <- unique(ds[which(ds$course == x[j]),]$section)
+                                    temp <- which(ds$course == x[j] & ds$section == sections[as.numeric(tab[j, i])])
+                                    list <- c(list, temp)
+                                }
+                                list <- c(list, nrow(ds))
+                            }
+                            return(list)
+                        }
                     }
                 }
             }
         }
+        
+        
+        
+        
     })
         
-    
-    output$schedule <- renderText({
-        if (input$OpenSeat == FALSE) {
-            c('Course', 'Section', 'Days', 'Start', 'End', 'Room', 'Instructor', 'OpenSeats', '<br>',
-              unlist(t(ds_copy[id(), c('course', 'section', 'days', 'start', 'end', 'room', 'instructor', 'open', 'extra')])))
-        }else {
-            ws <- ds_copy[which(ds_copy$open > 0 | ds_copy$open == '********'),]
-            c('Course', 'Section', 'Days', 'Start', 'End', 'Room', 'Instructor', 'OpenSeats', '<br>',
-              unlist(t(ws[id(), c('course', 'section', 'days', 'start', 'end', 'room', 'instructor', 'open', 'extra')])))
-        }
+    output$schedule <- DT::renderDT({
+        if (input$OpenSeat == TRUE)
+            ds_copy <- ds_copy[which(ds_copy$open > 0 | ds_copy$open == ' '),]
             
+        datatable(ds_copy[id(), 
+            c('course', 'section', 'days', 'start', 'end', 'room', 'instructor', 'open', 'comment', 'extra')], 
+            rownames = FALSE,
+            colnames = c('Course', 'Section', 'Days', 'Start Time', 'End Time', 'Room', 'Instructor', 'Open Seats', 'Comment', 'extra'),
+            options = list(
+                pageLength = 10000,
+                ordering = FALSE,
+                dom = "t",
+                columnDefs = list(list(className ='dt-center', targets = 0:8), 
+                                  list(visible=FALSE, targets=9)
+                                  )
+                )
+            ) %>%
+            formatStyle("extra", backgroundColor=styleEqual(c(0, 1),c('white','lightgray')), target = "row")
     })
     
 })

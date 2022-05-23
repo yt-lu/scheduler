@@ -10,6 +10,8 @@
 library(shiny)
 library(shinyalert)
 library(readxl)
+library(DT)
+
 ds <- read_excel("CourseList.xlsx", sheet = 'in')
 ds <- ds[-(1:2),]
 colnames(ds) <- c('session', 'course', 'section', 'title', 'instructor',
@@ -58,7 +60,7 @@ shinyUI(fluidPage(
                        <li style = 'margin-bottom:0.3em;'>Due to the capacity of the server, please do <span style='color:red;'>NOT</span> leave the section fields open
                         for more than three large enrollment courses (e.g., BIO 212, CHM 111, INT 101, MAT 191, REL 160, SPN 111).</li>
                        <li style = 'margin-bottom:0.3em;'>Click the Run the Schedule button to see 
-                       different available schedules separated by lines of asterisks.</li>
+                       different available schedules separated by a gray line.</li>
                        </ul>"))
         )
    ),
@@ -66,7 +68,8 @@ shinyUI(fluidPage(
         mainPanel(
             # fluidRow(column(12, htmlOutput("schedule"))
             # )
-            htmlOutput('schedule')
+            # htmlOutput('schedule')
+            DT::dataTableOutput("schedule")
         )
     )
 )
