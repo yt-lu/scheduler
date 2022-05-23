@@ -129,7 +129,7 @@ shinyServer(function(input, output, session) {
     }
     
     ####################################################
-    id <- eventReactive(input$run, {
+    id <- eventReactive(c(input$run, input$OpenSeat), {
         if (input$OpenSeat == TRUE) {
             ds <- ds[which(ds$open > 0 | ds$open == ' '),]
         }
@@ -267,7 +267,7 @@ shinyServer(function(input, output, session) {
             options = list(
                 pageLength = 10000,
                 ordering = FALSE,
-                dom = "t",
+                dom = "p",
                 columnDefs = list(list(className ='dt-center', targets = 0:8), 
                                   list(visible=FALSE, targets=9)
                                   )
