@@ -164,7 +164,6 @@ shinyServer(function(input, output, session) {
                 return()
             }else {
                 if (max_depth == 0) {
-                    shinyalert('No need for a search', 'info')
                     return(list)
                 }else {
                     
@@ -180,7 +179,7 @@ shinyServer(function(input, output, session) {
                         
                         
                         if (w > max_width[d] & d > 1) {
-                            print('going back one level')
+                            # print('going back one level')
                             d <- d - 1
                             w <- as.numeric(sched[open[d]]) + 1
                             sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
@@ -190,7 +189,7 @@ shinyServer(function(input, output, session) {
                             sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
                             temp <- which(ds$course == x[open[d]] & ds$section == sec[w])
                             if (addsection(list, temp) & d < max_depth) {
-                                print('go deeper')
+                                # print('go deeper')
                                 sched[open[d]] <- w
                                 list <- c(list, temp)
 
@@ -198,7 +197,7 @@ shinyServer(function(input, output, session) {
                                 d <- d + 1
                                 w <- 1
                             }else if (addsection(list, temp) & d == max_depth) {
-                                print('s. go wider')
+                                # print('s. go wider')
                                 sched[open[d]] <- w
                                 tab <- cbind(tab, sched)
                                 sched[open[d]] <- NA
@@ -207,7 +206,7 @@ shinyServer(function(input, output, session) {
                                 
                                 
                             }else if (!addsection(list, temp)) {
-                                print('f. go wider')
+                                # print('f. go wider')
                                 w <- w + 1
                             }
                         }
