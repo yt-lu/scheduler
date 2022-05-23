@@ -39,18 +39,24 @@ shinyUI(fluidPage(
            })
         ),
         column(6,
+            checkboxInput('OpenSeat', 
+                          label = 'Only display sections with open seats',
+                          value = FALSE),
             useShinyalert(),
             actionButton("run", "Run the Schedule"),
             hr(),
-            print(HTML("<p style = 'font-size:110%;'>How to use the app to schedule up to six courses.</p>
+            print(HTML("<p style = 'font-size:120%;'>How to use the app to schedule up to six courses.</p>
             
-            <ul style = 'font-size:110%;'><li style = 'margin-bottom:0.3em;'>Select desired courses using the drop-down menu or 
+            <ul style = 'font-size:120%;'><li style = 'margin-bottom:0.3em;'>Select desired courses using the drop-down menu or 
                         delete the double dash and type in key words (e.g., UNV 101).</li>
                        <li style = 'margin-bottom:0.3em;'>If you want to schedule a paticular section for a course, 
                        specify that particular section.</li>
                        <li style = 'margin-bottom:0.3em;'>If there is no preference
-                       for any particular section, leave the section field open. 
-                       </li>
+                       for any particular section, leave the section field open.</li>
+                       <li style = 'margin-bottom:0.3em;'>To delete a course or a section, 
+                       select the double dash on the top of the drop-down menu.</li>
+                       <li style = 'margin-bottom:0.3em;'>Due to the capacity of the server, please do <span style='color:red;'>NOT</span> leave the section fields open
+                        for more than three large enrollment courses (e.g., BIO 212, CHM 111, INT 101, MAT 191, REL 160, SPN 111).</li>
                        <li style = 'margin-bottom:0.3em;'>Click the Run the Schedule button to see 
                        different available schedules separated by lines of asterisks.</li>
                        </ul>"))

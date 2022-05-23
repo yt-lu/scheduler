@@ -14,6 +14,7 @@ library(readxl)
 ds <- read_excel("CourseList.xlsx", sheet = 'in')
 #ds <- read_excel("/Users/lu_y/Downloads/CourseList.xls", sheet = 'CourseList ')
 ds <- ds[-(1:2),]
+
 m <- nrow(ds)
 n <- ncol(ds)
 
@@ -35,6 +36,7 @@ ds_copy[nrow(ds_copy) + 1, ] <- as.list(rep('********', n)) # A separation line
 
 ds['extra'] <- '<br>'                # Add a line breaker in the end of each row for printing
 ds_copy['extra'] <- '<br>'                # Add a line breaker in the end of each row for printing
+
 
 shinyServer(function(input, output, session) {
     
@@ -121,6 +123,9 @@ shinyServer(function(input, output, session) {
     
     ####################################################
     id <- eventReactive(input$run, {
+        if (input$OpenSeat == TRUE) {
+            ds <- ds[which(ds$open > 0 | ds$open == '********'),]
+        }
         x <- unlist(lapply(1:6, function(i){input[[paste0('c', i)]]}))
         y <- unlist(lapply(1:6, function(i){input[[paste0('s', i)]]}))
         m <- which(x != '--')
@@ -136,7 +141,6 @@ shinyServer(function(input, output, session) {
         tab <- matrix(NA, nrow = 6, ncol = 1) # All possible schedules
         sched <- rep(NA, 6)                   # One possible schedule
         list <- nrow(ds) # Initialize list of schedules
-        
         if (length(m) == 0) 
             return()
         else {
@@ -172,14 +176,13 @@ shinyServer(function(input, output, session) {
                     max_width <- sapply(1:max_depth, function(i){
                         max_width[i] = length(unique(ds[which(ds$course == x[open[i]]),]$section))
                         })
-                    
                     d <- 1
                     w <- 1
                     while(!(d == 1 & w > max_width[1])) {
                         
                         
                         if (w > max_width[d] & d > 1) {
-                            # print('going back one level')
+                            print('going back one level')
                             d <- d - 1
                             w <- as.numeric(sched[open[d]]) + 1
                             sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
@@ -189,24 +192,20 @@ shinyServer(function(input, output, session) {
                             sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
                             temp <- which(ds$course == x[open[d]] & ds$section == sec[w])
                             if (addsection(list, temp) & d < max_depth) {
-                                # print('go deeper')
+                                print('go deeper')
                                 sched[open[d]] <- w
                                 list <- c(list, temp)
-
-                                #print(list)
                                 d <- d + 1
                                 w <- 1
                             }else if (addsection(list, temp) & d == max_depth) {
-                                # print('s. go wider')
+                                print('s. go wider')
                                 sched[open[d]] <- w
                                 tab <- cbind(tab, sched)
                                 sched[open[d]] <- NA
                                 list <- list[! list %in% temp]
                                 w <- w + 1
-                                
-                                
                             }else if (!addsection(list, temp)) {
-                                # print('f. go wider')
+                                print('f. go wider')
                                 w <- w + 1
                             }
                         }
@@ -215,12 +214,13 @@ shinyServer(function(input, output, session) {
                         shinyalert('No compatible schedules for these courses.', type = 'error')
                         return()
                     }else {
-                        tab <- tab[, -1]
-                        ns <- ncol(tab)
+                        tab <- as.data.frame(tab[, -1])
+                        ns <- ncol(tab) # number of schedules
                         list <- nrow(ds)
                         for (i in 1:ns) {
                             for (j in m) {
-                                temp <- which(ds$course == x[j] & ds$section == tab[j, i])
+                                sections <- unique(ds[which(ds$course == x[j]),]$section)
+                                temp <- which(ds$course == x[j] & ds$section == sections[as.numeric(tab[j, i])])
                                 list <- c(list, temp)
                             }
                             list <- c(list, nrow(ds))
@@ -234,8 +234,15 @@ shinyServer(function(input, output, session) {
         
     
     output$schedule <- renderText({
-        c('Course', 'Section', 'Days', 'Start', 'End', 'Room', 'Instructor', 'OpenSeats', '<br>',
-        unlist(t(ds_copy[id(), c('course', 'section', 'days', 'start', 'end', 'room', 'instructor', 'open', 'extra')])))
+        if (input$OpenSeat == FALSE) {
+            c('Course', 'Section', 'Days', 'Start', 'End', 'Room', 'Instructor', 'OpenSeats', '<br>',
+              unlist(t(ds_copy[id(), c('course', 'section', 'days', 'start', 'end', 'room', 'instructor', 'open', 'extra')])))
+        }else {
+            ws <- ds_copy[which(ds_copy$open > 0 | ds_copy$open == '********'),]
+            c('Course', 'Section', 'Days', 'Start', 'End', 'Room', 'Instructor', 'OpenSeats', '<br>',
+              unlist(t(ws[id(), c('course', 'section', 'days', 'start', 'end', 'room', 'instructor', 'open', 'extra')])))
+        }
+            
     })
     
 })
