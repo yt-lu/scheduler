@@ -38,9 +38,22 @@ shinyUI(fluidPage(
                selectInput(paste0('s', i), 'Section', c('--'))
            })
         ),
-        column(2,
+        column(6,
             useShinyalert(),
-            actionButton("run", "Run the Schedule")
+            actionButton("run", "Run the Schedule"),
+            hr(),
+            print(HTML("<p style = 'font-size:110%;'>How to use the app to schedule up to six courses.</p>
+            
+            <ul style = 'font-size:110%;'><li style = 'margin-bottom:0.3em;'>Select desired courses using the drop-down menu or 
+                        delete the double dash and type in key words (e.g., UNV 101).</li>
+                       <li style = 'margin-bottom:0.3em;'>If you want to schedule a paticular section for a course, 
+                       specify that particular section.</li>
+                       <li style = 'margin-bottom:0.3em;'>If there is no preference
+                       for any particular section, leave the section field open. 
+                       </li>
+                       <li style = 'margin-bottom:0.3em;'>Click the Run the Schedule button to see 
+                       different available schedules separated by lines of asterisks.</li>
+                       </ul>"))
         )
    ),
         # Show a plot of the generated distribution
