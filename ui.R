@@ -42,7 +42,7 @@ shinyUI(fluidPage(
         ),
         column(6,
             checkboxInput('OpenSeat', 
-                          label = 'Only display sections with open seats',
+                          label = 'Only display sections with open seats.',
                           value = FALSE),
             useShinyalert(),
             actionButton("run", "Run the Schedule"),

@@ -88,6 +88,7 @@ shinyServer(function(input, output, session) {
         }
     }
     
+    
     # Check if time conflicts. 1 for starting time and 2 for ending time.
     sametime <- function(a, b) {
         if (is.na(a[1]) | is.na(a[2]) | is.na(b[1]) | is.na(b[2])) {
@@ -100,26 +101,28 @@ shinyServer(function(input, output, session) {
         }
     }
     
+    
     # Check if two courses conflict
-    overlap <- function(i, j) {
-        if (i == nrow(ds) | j == nrow(ds))
+    overlap <- function(i, j, df) {
+        if (i == nrow(df) | j == nrow(df))
             return(FALSE)
         else {
-            a <- c(ds$start[i], ds$end[i])
-            b <- c(ds$start[j], ds$end[j])
-            if (sameday(ds$days[i], ds$days[j]) & sametime(a, b))
+            a <- c(df$start[i], df$end[i])
+            b <- c(df$start[j], df$end[j])
+            if (sameday(df$days[i], df$days[j]) & sametime(a, b))
                 return(TRUE)
             else
                 return(FALSE)
         }
     }
     
+    
     # Check if a course can be added.
-    addsection <- function(list, add) {
+    addsection <- function(list, add, df) {
         out <- TRUE
         for (t in list) {
             for (a in add) {
-                if (overlap(a, t) == TRUE) {
+                if (overlap(a, t, df) == TRUE) {
                     out <- FALSE
                     break
                 } 
@@ -128,8 +131,11 @@ shinyServer(function(input, output, session) {
         return(out)
     }
     
+    
+    
     ####################################################
     id <- eventReactive(c(input$run, input$OpenSeat), {
+        
         if (input$OpenSeat == TRUE) {
             ds <- ds[which(ds$open > 0 | ds$open == ' '),]
         }
@@ -138,11 +144,10 @@ shinyServer(function(input, output, session) {
         m <- which(x != '--')
         n <- which(y != '--')
         mn <- intersect(m, n)
-
         if (length(mn) == 0) 
             open <- m
         else
-            open <- m[-mn]
+            open <- m[-which(m %in% mn)]
         
         large_enrollment <- intersect(x[open], large_enrollment_course)
         how_many <- length(large_enrollment)
@@ -155,21 +160,22 @@ shinyServer(function(input, output, session) {
                        html = TRUE)
             return()
         }else {
-            max_depth <- length(open)
-            tab <- matrix(NA, nrow = 6, ncol = 1) # All possible schedules
-            sched <- rep(NA, 6)                   # One possible schedule
-            list <- nrow(ds) # Initialize list of schedules
             if (length(m) == 0) 
                 return()
             else {
+                
                 done = FALSE
+                max_depth <- length(open)
+                tab <- matrix(NA, nrow = 6, ncol = 1) # All possible schedules
+                sched <- rep(NA, 6)                   # One possible schedule
+                list <- nrow(ds) # Initialize list of schedules
                 if (length(mn) > 0) {
                     temp <- which(ds$course == x[mn[1]] & ds$section == y[mn[1]])
                     list <- c(list, temp)
                     sched[mn[1]] <- y[mn[1]]
                     for (i in mn[-1]) {
                         temp <- which(ds$course == x[i] & ds$section == y[i])
-                        if (addsection(list, temp)) {
+                        if (addsection(list, temp, ds)) {
                             sched[i] <- y[i]
                             list <- c(list, temp)
                         } else {
@@ -188,19 +194,18 @@ shinyServer(function(input, output, session) {
                     if (max_depth == 0) {
                         return(list)
                     }else {
-                        
                         # Need a search when max_depth > 0
                         max_width <- rep(NA, max_depth)
                         max_width <- sapply(1:max_depth, function(i){
                             max_width[i] = length(unique(ds[which(ds$course == x[open[i]]),]$section))
                         })
+                        
                         d <- 1
                         w <- 1
                         while(!(d == 1 & w > max_width[1])) {
                             
-                            
                             if (w > max_width[d] & d > 1) {
-                                # print('going back one level')
+                                print('going back one level')
                                 d <- d - 1
                                 w <- as.numeric(sched[open[d]]) + 1
                                 sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
@@ -209,21 +214,21 @@ shinyServer(function(input, output, session) {
                             } else {
                                 sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
                                 temp <- which(ds$course == x[open[d]] & ds$section == sec[w])
-                                if (addsection(list, temp) & d < max_depth) {
-                                    # print('go deeper')
+                                if (addsection(list, temp, ds) & d < max_depth) {
+                                    print('go deeper')
                                     sched[open[d]] <- w
                                     list <- c(list, temp)
                                     d <- d + 1
                                     w <- 1
-                                }else if (addsection(list, temp) & d == max_depth) {
-                                    # print('s. go wider')
+                                }else if (addsection(list, temp, ds) & d == max_depth) {
+                                    print('s. go wider')
                                     sched[open[d]] <- w
                                     tab <- cbind(tab, sched)
                                     sched[open[d]] <- NA
                                     list <- list[! list %in% temp]
                                     w <- w + 1
-                                }else if (!addsection(list, temp)) {
-                                    # print('f. go wider')
+                                }else if (!addsection(list, temp, ds)) {
+                                    print('f. go wider')
                                     w <- w + 1
                                 }
                             }
