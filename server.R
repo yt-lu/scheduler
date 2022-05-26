@@ -154,8 +154,8 @@ shinyServer(function(input, output, session) {
         how_many <- length(large_enrollment)
         if (how_many > 2) {
             shinyalert(title = 'Sorry', 
-                        text = c(sprintf('The app can only search for at most TWO 
-                                    large enrollment courses with no specified sections. 
+                        text = c(sprintf('Due to the limited capacity of the server, the app can only search for at most TWO 
+                                    large enrollment courses with open specified sections. 
                                     You have provided %d: ', how_many), large_enrollment),
                        type = 'info', 
                        html = TRUE)
@@ -235,7 +235,7 @@ shinyServer(function(input, output, session) {
                             }
                         }
                         if (ncol(tab) == 1) {
-                            shinyalert('No compatible schedules for these courses.', type = 'error')
+                            shinyalert('No compatible schedules for these courses.', type = 'info')
                             return()
                         }else {
                             tab <- as.data.frame(tab[, -1])

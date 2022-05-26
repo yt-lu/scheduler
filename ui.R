@@ -49,19 +49,17 @@ shinyUI(fluidPage(
             hr(),
             print(HTML("<p style = 'font-size:120%;'>How to use the app to schedule up to six courses.</p>
             
-            <ul style = 'font-size:120%;'><li style = 'margin-bottom:0.3em;'>Select desired courses using the drop-down menu or 
-                        delete the double dash and type in key words (e.g., UNV 101).</li>
-                       <li style = 'margin-bottom:0.3em;'>If you want to schedule a paticular section for a course, 
-                       specify that particular section.</li>
-                       <li style = 'margin-bottom:0.3em;'>If there is no preference
-                       for any particular section, leave the section field open.</li>
-                       <li style = 'margin-bottom:0.3em;'>To delete a course or a section, 
+            <ul style = 'font-size:120%;'><li style = 'margin-bottom:0.3em;'>Select desired courses using the drop-down menu, or 
+                        delete the double dash and type in key words (e.g., UNV 101) for quicker selection.</li>
+                       <li style = 'margin-bottom:0.3em;'>Select sections (if you know those for sure), or leave the section fields open
+                       (to conduct a search).</li>
+                       <li style = 'margin-bottom:0.3em;'>To remove a course/section, 
                        select the double dash on the top of the drop-down menu.</li>
-                       <li style = 'margin-bottom:0.3em;'>Due to the capacity of the server, please do <span style='color:red;'>NOT</span> leave the section fields open
-                        for more than TWO large enrollment courses (e.g., BIO 212, CHM 111, INT 101, MAT 191, REL 160, SPN 111).</li>
                        <li style = 'margin-bottom:0.3em;'>Click the Run the Schedule button to see 
-                       different available schedules separated by a gray line.</li>
-                       </ul>"))
+                       different available schedules separated by orange bands.</li>
+                       </ul>")),
+            hr(),
+            print(HTML("<p style='text-align: center;'>&copy; 2022 Yuanting Lu (lu_y@mercer.edu)</p>")),
         )
    ),
         # Show a plot of the generated distribution
