@@ -148,6 +148,7 @@ shinyServer(function(input, output, session) {
             open <- m
         else
             open <- m[-which(m %in% mn)]
+
         
         large_enrollment <- intersect(x[open], large_enrollment_course)
         how_many <- length(large_enrollment)
@@ -205,7 +206,7 @@ shinyServer(function(input, output, session) {
                         while(!(d == 1 & w > max_width[1])) {
                             
                             if (w > max_width[d] & d > 1) {
-                                print('going back one level')
+                                #print('going back one level')
                                 d <- d - 1
                                 w <- as.numeric(sched[open[d]]) + 1
                                 sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
@@ -215,20 +216,20 @@ shinyServer(function(input, output, session) {
                                 sec <- unique(ds[which(ds$course == x[open[d]]),]$section)
                                 temp <- which(ds$course == x[open[d]] & ds$section == sec[w])
                                 if (addsection(list, temp, ds) & d < max_depth) {
-                                    print('go deeper')
-                                    sched[open[d]] <- w
+                                    #print('go deeper')
+                                    sched[open[d]] <- sec[w]
                                     list <- c(list, temp)
                                     d <- d + 1
                                     w <- 1
                                 }else if (addsection(list, temp, ds) & d == max_depth) {
-                                    print('s. go wider')
-                                    sched[open[d]] <- w
+                                    #print('s. go wider')
+                                    sched[open[d]] <- sec[w]
                                     tab <- cbind(tab, sched)
                                     sched[open[d]] <- NA
                                     list <- list[! list %in% temp]
                                     w <- w + 1
                                 }else if (!addsection(list, temp, ds)) {
-                                    print('f. go wider')
+                                    #print('f. go wider')
                                     w <- w + 1
                                 }
                             }
@@ -243,8 +244,9 @@ shinyServer(function(input, output, session) {
                             for (i in 1:ns) {
                                 # print(c('Schedule', i))
                                 for (j in m) {
-                                    sections <- unique(ds[which(ds$course == x[j]),]$section)
-                                    temp <- which(ds$course == x[j] & ds$section == sections[as.numeric(tab[j, i])])
+                                    #sections <- unique(ds[which(ds$course == x[j]),]$section)
+                                    #temp <- which(ds$course == x[j] & ds$section == sections[as.numeric(tab[j, i])])
+                                    temp <- which(ds$course == x[j] & ds$section == tab[j, i])
                                     list <- c(list, temp)
                                 }
                                 list <- c(list, nrow(ds))
@@ -278,7 +280,7 @@ shinyServer(function(input, output, session) {
                                   )
                 )
             ) %>%
-            formatStyle("extra", backgroundColor=styleEqual(c(0, 1),c('white','lightgray')), target = "row")
+            formatStyle("extra", backgroundColor=styleEqual(c(0, 1),c('white','orange')), target = "row")
     })
     
 })
