@@ -151,9 +151,9 @@ shinyServer(function(input, output, session) {
         
         large_enrollment <- intersect(x[open], large_enrollment_course)
         how_many <- length(large_enrollment)
-        if (how_many > 3) {
+        if (how_many > 2) {
             shinyalert(title = 'Sorry', 
-                        text = c(sprintf('The app can only search for at most THREE 
+                        text = c(sprintf('The app can only search for at most TWO 
                                     large enrollment courses with no specified sections. 
                                     You have provided %d: ', how_many), large_enrollment),
                        type = 'info', 

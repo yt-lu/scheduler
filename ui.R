@@ -58,7 +58,7 @@ shinyUI(fluidPage(
                        <li style = 'margin-bottom:0.3em;'>To delete a course or a section, 
                        select the double dash on the top of the drop-down menu.</li>
                        <li style = 'margin-bottom:0.3em;'>Due to the capacity of the server, please do <span style='color:red;'>NOT</span> leave the section fields open
-                        for more than three large enrollment courses (e.g., BIO 212, CHM 111, INT 101, MAT 191, REL 160, SPN 111).</li>
+                        for more than TWO large enrollment courses (e.g., BIO 212, CHM 111, INT 101, MAT 191, REL 160, SPN 111).</li>
                        <li style = 'margin-bottom:0.3em;'>Click the Run the Schedule button to see 
                        different available schedules separated by a gray line.</li>
                        </ul>"))
