@@ -22,8 +22,9 @@ colnames(ds) <- c('session', 'course', 'section', 'title', 'instructor',
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
     
+    tags$head(
+        tags$link(rel = "icon", type = "image/png", sizes = "32x32", href = "/my_logo.jpeg")),
     
-    # Application title
     titlePanel('Scheduler'),
     
     fluidRow(
