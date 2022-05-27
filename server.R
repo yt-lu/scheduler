@@ -272,15 +272,15 @@ shinyServer(function(input, output, session) {
     output$schedule <- DT::renderDT({
         
         datatable(mercer_copy[id(),
-                          c('course', 'section', 'days', 'start', 'end', 'room', 'instructor', 'open', 'comment', 'extra')],
+                          c('course', 'section', 'title', 'days', 'start', 'end', 'room', 'instructor', 'open', 'comment', 'extra')],
                   rownames = FALSE,
-                  colnames = c('Course', 'Section', 'Days', 'Start Time', 'End Time', 'Room', 'Instructor', 'Open Seats', 'Comment', 'extra'),
+                  colnames = c('Course', 'Section', 'Title','Days', 'Start Time', 'End Time', 'Room', 'Instructor', 'Open Seats', 'Comment', 'extra'),
                   options = list(
                       pageLength = 10000,
                       ordering = FALSE,
                       dom = "p",
-                      columnDefs = list(list(className ='dt-center', targets = 0:8),
-                                        list(visible=FALSE, targets=9)
+                      columnDefs = list(list(className ='dt-center', targets = 0:9),
+                                        list(visible=FALSE, targets=10)
                       )
                   )
         ) %>%
