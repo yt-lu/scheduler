@@ -29,7 +29,7 @@ mercer$days <- gsub('\\s+', '', mercer$days) # Trim the white space
 ####################################################################
 shinyServer(function(input, output, session) {
     
-    ds <- eventReactive(input$OpenSeat, {
+    ds <- eventReactive(input$run, {
         
         ds <- mercer
         if (input$OpenSeat) {
@@ -39,7 +39,7 @@ shinyServer(function(input, output, session) {
         return(ds)
     })
     
-    ds_nice <- eventReactive(input$OpenSeat, {
+    ds_nice <- eventReactive(input$run, {
         ds_copy <- as.data.frame(ds())
         ds_copy <- ds_copy[-nrow(ds_copy), ] 
         colnames(ds_copy) <- c('session', 'course', 'section', 'title', 'instructor',
@@ -150,7 +150,7 @@ shinyServer(function(input, output, session) {
     
     
     ####################################################
-    id <- eventReactive(c(input$OpenSeat, input$run), {
+    id <- eventReactive(c(input$run), {
 
         df <- ds()
         # Get the input information

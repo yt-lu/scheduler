@@ -44,10 +44,11 @@ shinyUI(fluidPage(
         ),
         column(6,
             checkboxInput('OpenSeat', 
-                          label = 'Only display sections with open seats.',
-                          value = FALSE),
+                          label = 'Only display sections with open seats in the results.',
+                          value = FALSE,
+                          width = '100%'),
             useShinyalert(),
-            actionButton("run", "Run the Schedule"),
+            actionButton("run", "Run", width = '30%'),
             hr(),
             print(HTML("<p style = 'font-size:120%;'>How to use the app:</p>
             
@@ -57,11 +58,11 @@ shinyUI(fluidPage(
                        (to conduct a search).</li>
                        <li style = 'margin-bottom:0.3em;'>To remove a course/section, 
                        select the double dash on the top of the drop-down menu.</li>
-                       <li style = 'margin-bottom:0.3em;'>Click the Run the Schedule button to see 
+                       <li style = 'margin-bottom:0.3em;'>Click the <em>Run</em> button to see 
                        different available schedules separated by orange bands.</li>
                        </ul>")),
             hr(),
-            print(HTML("<p style='text-align: center;'>&copy; 2022 Yuanting Lu (lu_y@mercer.edu)</p>")),
+            print(HTML("<p style='text-align: center;'>Go Bears &copy; 2022 Yuanting Lu (lu_y@mercer.edu)</p>")),
         )
    ),
         # Show a plot of the generated distribution
