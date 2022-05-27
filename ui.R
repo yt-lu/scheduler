@@ -1,6 +1,7 @@
 #
-# This is the user-interface definition of a Shiny web application. You can
-# run the application by clicking 'Run App' above.
+# Author: Yuanting Lu (Department of Math, CLAS, Mercer University)
+#
+# Last updated: 8:30 pm, May 26, 2022
 #
 # Find out more about building applications with Shiny here:
 #
@@ -23,7 +24,8 @@ shinyUI(fluidPage(
     
     
     # Application title
-    titlePanel("Scheduler"),
+    titlePanel(span("Scheduler",
+                         style = "color: blank; font-size: 28px; font-style: italic;")),
     
     fluidRow(
         column(3, 
@@ -47,7 +49,7 @@ shinyUI(fluidPage(
             useShinyalert(),
             actionButton("run", "Run the Schedule"),
             hr(),
-            print(HTML("<p style = 'font-size:120%;'>How to use the app to schedule up to six courses.</p>
+            print(HTML("<p style = 'font-size:120%;'>How to use the app:</p>
             
             <ul style = 'font-size:120%;'><li style = 'margin-bottom:0.3em;'>Select desired courses using the drop-down menu, or 
                         delete the double dash and type in key words (e.g., UNV 101) for quicker selection.</li>
