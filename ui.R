@@ -24,8 +24,7 @@ shinyUI(fluidPage(
     
     
     # Application title
-    titlePanel(span("Scheduler",
-                         style = "color: blank; font-size: 28px; font-style: italic;")),
+    titlePanel('Scheduler'),
     
     fluidRow(
         column(3, 
