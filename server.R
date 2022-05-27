@@ -16,8 +16,6 @@ library(DT)
 
 mercer <- read_excel("CourseList.xlsx", sheet = 'in')
 mercer <- mercer[-(1:2),]
-m <- nrow(mercer)
-n <- ncol(mercer)
 
 colnames(mercer) <- c('session', 'course', 'section', 'title', 'instructor',
                   'days', 'start', 'end', 'campus', 'location',
@@ -25,37 +23,31 @@ colnames(mercer) <- c('session', 'course', 'section', 'title', 'instructor',
 
 mercer$days <- gsub('\\s+', '', mercer$days) # Trim the white space
 
+mercer_copy <- mercer
+time0 <- as.numeric(unlist(mercer[, 'start']))
+time1 <- as.numeric(unlist(mercer[, 'end']))
+mercer_copy[, 'start'] <- format(as.POSIXct(time0*24*3600, origin="2001-01-01", "GMT"), "%I:%M %p")
+mercer_copy[, 'end'] <- format(as.POSIXct(time1*24*3600, origin="2001-01-01", "GMT"), "%I:%M %p")
+
+mercer[nrow(mercer) + 1, ] <- as.list(rep(' ', ncol(mercer))) # A separation line
+mercer_copy[nrow(mercer_copy) + 1, ] <- as.list(rep(' ', ncol(mercer_copy))) # A separation line
+mercer_copy['extra'] <- ifelse(mercer_copy$course == ' ', 1, 0) # A indicator column for coloring in output
+
 
 ####################################################################
 shinyServer(function(input, output, session) {
     
     ds <- eventReactive(input$run, {
         
-        ds <- mercer
+        ds <- mercer[-nrow(mercer), ] # Remove the blank row
         if (input$OpenSeat) {
             ds <- mercer[which(mercer$open > 0),]
         }
-        ds[nrow(ds) + 1, ] <- as.list(rep(' ', n)) # A separation line
         return(ds)
     })
     
-    ds_nice <- eventReactive(input$run, {
-        ds_copy <- as.data.frame(ds())
-        ds_copy <- ds_copy[-nrow(ds_copy), ] 
-        colnames(ds_copy) <- c('session', 'course', 'section', 'title', 'instructor',
-                              'days', 'start', 'end', 'campus', 'location',
-                              'room', 'method', 'credits', 'max', 'open', 'comment')
-        time0 <- as.numeric(unlist(ds_copy[, 'start']))
-        time1 <- as.numeric(unlist(ds_copy[, 'end']))
-        ds_copy[, 'start'] <- format(as.POSIXct(time0*24*3600, origin="2001-01-01", "GMT"), "%I:%M %p")
-        ds_copy[, 'end'] <- format(as.POSIXct(time1*24*3600, origin="2001-01-01", "GMT"), "%I:%M %p")
-        ds_copy[nrow(ds_copy) + 1, ] <- as.list(rep(' ', n)) # A separation line
-        ds_copy['extra'] <- ifelse(ds_copy$course == ' ', 1, 0) 
-        return(ds_copy)
-    })
-    
     large_enrollment_courses <- reactive({
-        df <- ds()[-nrow(ds()), ]
+        df <- ds()
         t <- as.matrix(table(df$course, df$section))
         t[t>1] <- 1
         tnew <- apply(t, 1, sum)
@@ -151,7 +143,7 @@ shinyServer(function(input, output, session) {
     
     ####################################################
     id <- eventReactive(c(input$run), {
-
+        
         df <- ds()
         # Get the input information
         x <- unlist(lapply(1:6, function(i){input[[paste0('c', i)]]}))
@@ -164,22 +156,7 @@ shinyServer(function(input, output, session) {
             return()
 
         app_exit <- FALSE
-        msg <- 'The following course(s) has no open seats: '
-        if (length(mn) > 0) {
-            for (i in mn) {
-                course_available <- which(df$course == x[i] & df$section == y[i])
-                if (length(course_available) == 0){
-                    msg <- paste0(msg, '<br>', x[i])
-                    app_exit <- TRUE
-                }
-            }
-        }
-
-        if (app_exit) {
-            shinyalert('Sorry', msg, type = 'info', html = TRUE)
-            return()
-        }
-
+        
         if (length(mn) == 0)
             open <- m
         else
@@ -201,22 +178,22 @@ shinyServer(function(input, output, session) {
                 max_depth <- length(open)
                 tab <- matrix(NA, nrow = 6, ncol = 1) # All possible schedules
                 sched <- rep(NA, 6)                   # One possible schedule
-                list <- nrow(df) # Initialize list of schedules
-
+                list <- nrow(mercer) # Initialize list of schedules
+                
                 if (length(mn) > 0) {
-                    temp <- which(df$course == x[mn[1]] & df$section == y[mn[1]])
+                    temp <- which(mercer$course == x[mn[1]] & mercer$section == y[mn[1]])
                     list <- c(list, temp)
                     sched[mn[1]] <- y[mn[1]]
-
+                    
                     for (i in mn[-1]) {
-                        temp <- which(df$course == x[i] & df$section == y[i])
+                        temp <- which(mercer$course == x[i] & mercer$section == y[i])
 
-                        if (addsection(list, temp, df)) {
+                        if (addsection(list, temp, mercer)) {
                             sched[i] <- y[i]
                             list <- c(list, temp)
                         } else {
                             shinyalert('Schedule conflict',
-                                       paste(x[mn[i]], 'conflicts with one of the existing course'),
+                                       paste(x[i], 'conflicts with one of the existing course'),
                                        type = 'error')
                             app_exit = TRUE
                             break
@@ -230,41 +207,42 @@ shinyServer(function(input, output, session) {
                     if (max_depth == 0) {
                         return(list)
                     }else {
+
                         # Need a search when max_depth > 0
                         max_width <- rep(NA, max_depth)
                         max_width <- sapply(1:max_depth, function(i){
                             max_width[i] = length(unique(df[which(df$course == x[open[i]]),]$section))
                         })
-
+                        
                         d <- 1
                         w <- 1
                         while(!(d == 1 & w > max_width[1])) {
 
                             if (w > max_width[d] & d > 1) {
-                                print('going back one level')
+                                # print('going back one level')
                                 d <- d - 1
                                 w <- as.numeric(sched[open[d]]) + 1
                                 sec <- unique(df[which(df$course == x[open[d]]),]$section)
-                                erase <- which(df$course == x[open[d]] & df$section == sec[w - 1])
+                                erase <- which(mercer$course == x[open[d]] & mercer$section == sec[w - 1])
                                 list <- list[! list %in% erase]
                             } else {
                                 sec <- unique(df[which(df$course == x[open[d]]),]$section)
-                                temp <- which(df$course == x[open[d]] & df$section == sec[w])
-                                if (addsection(list, temp, df) & d < max_depth) {
-                                    print('go deeper')
+                                temp <- which(mercer$course == x[open[d]] & mercer$section == sec[w])
+                                if (addsection(list, temp, mercer) & d < max_depth) {
+                                    # print('go deeper')
                                     sched[open[d]] <- sec[w]
                                     list <- c(list, temp)
                                     d <- d + 1
                                     w <- 1
-                                }else if (addsection(list, temp, df) & d == max_depth) {
-                                    print('s. go wider')
+                                }else if (addsection(list, temp, mercer) & d == max_depth) {
+                                    # print('succeded. go wider')
                                     sched[open[d]] <- sec[w]
                                     tab <- cbind(tab, sched)
                                     sched[open[d]] <- NA
                                     list <- list[! list %in% temp]
                                     w <- w + 1
-                                }else if (!addsection(list, temp, df)) {
-                                    print('f. go wider')
+                                }else if (!addsection(list, temp, mercer)) {
+                                    # print('failed. go wider')
                                     w <- w + 1
                                 }
                             }
@@ -276,14 +254,13 @@ shinyServer(function(input, output, session) {
                         }else {
                             tab <- as.data.frame(tab[, -1])
                             ns <- ncol(tab) # number of schedules
-                            list <- nrow(df)
+                            list <- nrow(mercer_copy)
                             for (i in 1:ns) {
-                                # print(c('Schedule', i))
                                 for (j in m) {
-                                    temp <- which(df$course == x[j] & df$section == tab[j, i])
+                                    temp <- which(mercer_copy$course == x[j] & mercer_copy$section == tab[j, i])
                                     list <- c(list, temp)
                                 }
-                                list <- c(list, nrow(df))
+                                list <- c(list, nrow(mercer_copy))
                             }
                             return(list)
                         }
@@ -294,8 +271,7 @@ shinyServer(function(input, output, session) {
     
     output$schedule <- DT::renderDT({
         
-        ds_copy <- ds_nice()
-        datatable(ds_copy[id(),
+        datatable(mercer_copy[id(),
                           c('course', 'section', 'days', 'start', 'end', 'room', 'instructor', 'open', 'comment', 'extra')],
                   rownames = FALSE,
                   colnames = c('Course', 'Section', 'Days', 'Start Time', 'End Time', 'Room', 'Instructor', 'Open Seats', 'Comment', 'extra'),

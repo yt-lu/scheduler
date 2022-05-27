@@ -22,9 +22,6 @@ colnames(ds) <- c('session', 'course', 'section', 'title', 'instructor',
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
     
-    tags$head(
-        tags$link(rel = "icon", type = "image/png", sizes = "32x32", href = "/my_logo.jpeg")),
-    
     titlePanel('Scheduler'),
     
     fluidRow(
@@ -44,7 +41,7 @@ shinyUI(fluidPage(
         ),
         column(6,
             checkboxInput('OpenSeat', 
-                          label = 'Only display sections with open seats in the results.',
+                          label = 'Only search sections with open seats.',
                           value = FALSE,
                           width = '100%'),
             useShinyalert(),
