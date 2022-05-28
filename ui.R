@@ -56,7 +56,7 @@ shinyUI(fluidPage(
                        <li style = 'margin-bottom:0.3em;'>To remove a course/section, 
                        select the double dash on the top of the drop-down menu.</li>
                        <li style = 'margin-bottom:0.3em;'>Click the <em>Run</em> button to see 
-                       different available schedules separated by orange bands.</li>
+                        possible schedules separated by orange bands.</li>
                        </ul>")),
             hr(),
             print(HTML("<p style='text-align: center;'>Go Bears &copy; 2022 Yuanting Lu (lu_y@mercer.edu)</p>")),
