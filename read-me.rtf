@@ -1,0 +1,167 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2580
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fswiss\fcharset0 Helvetica-BoldOblique;\f2\fswiss\fcharset0 Helvetica-Bold;
+}
+{\colortbl;\red255\green255\blue255;\red253\green139\blue9;\red253\green139\blue9;\red36\green255\blue255;
+\red36\green255\blue255;}
+{\*\expandedcolortbl;;\cssrgb\c100000\c61456\c0;\cssrgb\c100000\c61456\c0;\cssrgb\c4983\c100000\c100000;
+\cssrgb\c4983\c100000\c100000;}
+\margl1440\margr1440\vieww16980\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs28 \cf0 Detailed codes comments:\
+\
+Read the data from a data file and keep it in the variable 
+\f1\i\b \cf2 mercer
+\f0\i0\b0 \cf0 . \
+	Remove the first two rows (i.e., dataset  title).\
+	Re-name the columns.\
+	Trim the white spaces in the week days column. \
+Make a copy mercer_copy.\
+	Add a blank row in the end of 
+\f1\i\b \cf2 mercer
+\f0\i0\b0 \cf0  to initialize the variable 
+\f1\i\b \cf2 list
+\f0\i0\b0 \cf0  in the search process. \
+	Add a blank row in the end of 
+\f1\i\b \cf2 mercer_copy
+\f0\i0\b0 \cf0  as a separation band between different schedules in the printing process. \
+	Add a extra column to 
+\f1\i\b \cf3 mercer_copy 
+\f0\i0\b0 \cf0 as an indicator for colors in the printing process. 1 for orange and 0 for white. \
+Functions:\
+	
+\f1\i\b \cf2 ds() 
+\f0\i0\b0 \cf0 returns a data set based on the open seats checkbox. \
+	
+\f1\i\b \cf2 large_enrollment_courses()
+\f0\i0\b0 \cf0  returns courses that have more than a certain amount of sections. \
+	lapply \
+		Updates the sections drop-down menu based on the input courses.\
+		Show the section if there is only one. \
+		Make sure a course can not be input more than once. \
+	
+\f1\i\b \cf2 sameday()
+\f0\i0\b0 \cf0  checks if two rows are on the same day. \
+	
+\f1\i\b \cf2 sametime()
+\f0\i0\b0 \cf0  checks if two rows are on the same time. \
+	
+\f1\i\b \cf2 overlap()
+\f0\i0\b0 \cf0  checks if two rows overlap. \
+	
+\f1\i\b \cf2 addsection()
+\f0\i0\b0 \cf0  checks if two sections overlap. (A section may occupy multiple rows. )\
+	
+\f1\i\b \cf2 id()
+\f0\i0\b0 \cf0 \
+		Read 
+\f1\i\b \cf2 ds()
+\f0\i0\b0 \cf0 \
+		Create 
+\f1\i\b \cf2 sched
+\f0\i0\b0 \cf0  to store the section 
+\f2\b \ul names
+\f0\b0 \ulnone  of one vertical search. \
+		Create 
+\f1\i\b \cf2 tab
+\f0\i0\b0 \cf0  to store multiple 
+\f1\i\b \cf2 sched
+\f0\i0\b0 \cf0 \
+		Get the inputs. 
+\f2\b \cf4 Quit
+\f0\b0 \cf0  if there is no input. \
+		Identify courses with 
+\f1\i\b \cf2 open
+\f0\i0\b0 \cf0  sections. \
+		Add a cap for the number of 
+\f1\i\b \cf2 large_enrollment
+\f0\i0\b0 \cf0  courses in a search. \
+		
+\f1\i\b \cf2 list
+\f0\i0\b0 \cf0  keeps the row numbers of one vertical search (up to 
+\f1\i\b \cf2 max_depth
+\f0\i0\b0 \cf0  number of courses.)\
+		
+\f1\i\b \cf2 temp
+\f0\i0\b0 \cf0  gives the row numbers of a particular section. \
+		
+\f2\b \cf4 Quit
+\f0\b0 \cf0  if courses with specified sections have conflicts. \
+		
+\f2\b \cf4 Quit
+\f0\b0 \cf0  if there is no need for a search, i.e., 
+\f1\i\b \cf2 max_depth
+\f0\i0\b0 \cf0  is 0. \
+		Create 
+\f1\i\b \cf2 max_width
+\f0\i0\b0 \cf0  vector to store the max number of sections for each course that needs a search. \
+		
+\f1\i\b \cf2 d
+\f0\i0\b0 \cf0  for depth (courses) and 
+\f1\i\b \cf2 w
+\f0\i0\b0 \cf0  for width (sections). \
+		Starting from 
+\f1\i\b \cf2 d
+\f0\i0\b0 \cf0  = 1 and 
+\f1\i\b \cf2 w
+\f0\i0\b0 \cf0  = 1. Terminate a search if (
+\f1\i\b \cf2 d
+\f0\i0\b0 \cf0  = 1 and 
+\f1\i\b \cf2 w
+\f0\i0\b0 \cf0  > 
+\f1\i\b \cf3 max_width
+\f0\i0\b0 \cf0 [1])\
+			Check 
+\f1\i\b \cf3 d 
+\f0\i0\b0 \cf0 =2 and 
+\f1\i\b \cf3 w 
+\f0\i0\b0 \cf0 =1. \
+				Success and there are more depth to cover: 
+\f1\i\b \cf3 d
+\f0\i0\b0 \cf0  = 
+\f1\i\b \cf3 d
+\f0\i0\b0 \cf0  + 1, 
+\f1\i\b \cf3 w
+\f0\i0\b0 \cf0  = 1. Append 
+\f1\i\b \cf3 temp
+\f0\i0\b0 \cf0  to 
+\f1\i\b \cf2 list
+\f0\i0\b0 \cf0 . \
+				Success and there are no more depth to cover: 
+\f1\i\b \cf3 w
+\f0\i0\b0 \cf0  = 
+\f1\i\b \cf3 w
+\f0\i0\b0 \cf0  + 1. Append 
+\f1\i\b \cf2 sched
+\f0\i0\b0 \cf0  to 
+\f1\i\b \cf2 tab
+\f0\i0\b0 \cf0 . Clear 
+\f1\i\b \cf2 temp
+\f0\i0\b0 \cf0  in list. \
+				Failure. 
+\f1\i\b \cf3 w
+\f0\i0\b0 \cf0  = 
+\f1\i\b \cf3 w
+\f0\i0\b0 \cf0  + 1\
+				If 
+\f1\i\b \cf3 w
+\f0\i0\b0 \cf0  > 
+\f1\i\b \cf3 max_width
+\f0\i0\b0 \cf0 [d], move back one level. Remove corresponding rows in 
+\f1\i\b \cf3 list
+\f0\i0\b0 \cf0 . \
+		
+\f2\b \cf5 Quit
+\f0\b0 \cf0  if 
+\f1\i\b \cf3 tab
+\f0\i0\b0 \cf0  has one column, i.e., the initial na column, which means no compatible schedule found.\
+		Unwrap 
+\f1\i\b \cf3 tab
+\f0\i0\b0 \cf0  into a 
+\f1\i\b \cf2 long_list 
+\f0\i0\b0 \cf0 of row numbers (based on mercer).\
+\
+Printing\
+		\
+\
+	}
