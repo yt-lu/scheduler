@@ -1,12 +1,10 @@
-#
-# Author: Yuanting Lu (Department of Math, CLAS, Mercer University)
-#
-# Last updated: 8:30 pm, May 26, 2022
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+## Author: Yuanting Lu (Department of Math, CLAS, Mercer University)
+## Last updated: 2:00 am, May 29, 2022
+##
+## Find out more about building applications with Shiny here:
+##
+##    http://shiny.rstudio.com/
+
 
 library(shiny)
 library(shinyalert)
@@ -23,8 +21,8 @@ colnames(mercer) <- c('session', 'course', 'section', 'title', 'instructor',
 
 mercer$days <- gsub('\\s+', '', mercer$days) # Trim 'M W F' to 'MWF'.
 
-# The time columns in mercer are in decimals.
-# The time columns in mercer_copy are in time formats. 
+# The time columns in mercer are in decimals. (For calculations.)
+# The time columns in mercer_copy are in time formats. (For printing.)
 mercer_copy <- mercer
 time0 <- as.numeric(unlist(mercer[, 'start']))
 time1 <- as.numeric(unlist(mercer[, 'end']))
@@ -39,8 +37,11 @@ mercer_copy['extra'] <- ifelse(mercer_copy$course == ' ', 1, 0)
 
 
 ####################################################################
+## Server starts here
+####################################################################
 shinyServer(function(input, output, session) {
     
+    # Filter data if necessary
     ds <- eventReactive(input$run, {
         
         ds <- mercer[-nrow(mercer), ] # Remove the blank row
@@ -60,7 +61,6 @@ shinyServer(function(input, output, session) {
         return(large_enrollment_course)
     })
     
-    ####################################################
     # Update sections drop-down menu based on the courses selected
     # Display the section number directly if there is only one section offered
     # Otherwise, display '--'
@@ -84,7 +84,6 @@ shinyServer(function(input, output, session) {
             })      # End of observeEvent
     }) # End of lapply
 
-    ####################################################
     # Check if two courses are on the same day
     sameday <- function(a, b){
         if (a == 'TBD' | b == 'TBD'){
@@ -180,7 +179,6 @@ shinyServer(function(input, output, session) {
             return()
         }else {
                 max_depth <- length(open)             # Number of courses that need a search.
-                tab <- matrix(NA, nrow = 6, ncol = 1) # All possible schedules
                 sched <- rep(NA, 6)                   # One possible schedule
                 list <- nrow(mercer)                  # Initialize the list of schedules by the blank row
                 
@@ -223,6 +221,8 @@ shinyServer(function(input, output, session) {
                         d <- 1
                         w <- 1
                         
+                        long_list <- vector()
+                        
                         # Starting from open course (depth) 1 and section (width) 1
                         # Move to the first section of next open course.
                         #       -- If a match is found, move to the next course if possible.
@@ -250,10 +250,7 @@ shinyServer(function(input, output, session) {
                                     w <- 1
                                 }else if (addsection(list, temp, mercer) & d == max_depth) {
                                     # print('succeded. go wider')
-                                    sched[open[d]] <- sec[w]
-                                    tab <- cbind(tab, sched)
-                                    sched[open[d]] <- NA
-                                    list <- list[! list %in% temp]
+                                    long_list <- c(long_list, list, temp)
                                     w <- w + 1
                                 }else if (!addsection(list, temp, mercer)) {
                                     # print('failed. go wider')
@@ -261,23 +258,11 @@ shinyServer(function(input, output, session) {
                                 }
                             }
                         }
-
-                        if (ncol(tab) == 1) {
+                        if (length(long_list) == 0) {
                             shinyalert('No compatible schedules for these courses.', type = 'info')
                             return()
-                        }else {
-                            tab <- as.data.frame(tab[, -1])
-                            ns <- ncol(tab) # number of schedules
-                            list <- nrow(mercer_copy)
-                            for (i in 1:ns) {
-                                for (j in m) {
-                                    temp <- which(mercer_copy$course == x[j] & mercer_copy$section == tab[j, i])
-                                    list <- c(list, temp)
-                                }
-                                list <- c(list, nrow(mercer_copy))
-                            }
-                            return(list)
-                        }
+                        }else
+                            return(c(long_list, nrow(mercer)))
                     }
                 }
         }
@@ -300,7 +285,4 @@ shinyServer(function(input, output, session) {
         ) %>%
             formatStyle("extra", backgroundColor=styleEqual(c(0, 1),c('white','orange')), target = "row")
     })
-        
-    
-    
 })
